@@ -2,13 +2,13 @@
 
 ## To test the solution please use thoes URL : 
 
-** exercice 1
+**exercice 1**
 
 - http://localhost:8080/api/MyMethod?
 - http://localhost:8080/api/stringMethode?param1=ceci%20est%20un%20parametre
 - http://localhost:8080/api/somme?param1=2&param2=3
 
-** exercice 2
+**exercice 2**
 
 - http://localhost:8080/api/externalCall?param1=2
 
