@@ -4,6 +4,22 @@ using System.IO;
 using System.Net;
 using System.Text;
 using System.Web;
+using System.Reflection;
+using System.Collections;
+using System.Diagnostics;
+
+/**
+     * exercice 1
+
+    http://localhost:8080/api/MyMethod?
+    http://localhost:8080/api/stringMethode?param1=ceci%20est%20un%20parametre
+    http://localhost:8080/api/somme?param1=2&param2=3
+
+    exercice 2
+
+    http://localhost:8080/api/externalCall?param1=2
+**/
+
 
 namespace BasicServerHTTPlistener
 {
@@ -86,6 +102,8 @@ namespace BasicServerHTTPlistener
                 //get path in url 
                 Console.WriteLine(request.Url.LocalPath);
 
+                string methodeName = request.Url.Segments[request.Url.Segments.Length - 1];
+
                 // parse path in url 
                 foreach (string str in request.Url.Segments)
                 {
@@ -99,8 +117,6 @@ namespace BasicServerHTTPlistener
                 //parse params in url
                 Console.WriteLine("param1 = " + HttpUtility.ParseQueryString(request.Url.Query).Get("param1"));
                 Console.WriteLine("param2 = " + HttpUtility.ParseQueryString(request.Url.Query).Get("param2"));
-                Console.WriteLine("param3 = " + HttpUtility.ParseQueryString(request.Url.Query).Get("param3"));
-                Console.WriteLine("param4 = " + HttpUtility.ParseQueryString(request.Url.Query).Get("param4"));
 
                 //
                 Console.WriteLine(documentContents);
@@ -108,8 +124,34 @@ namespace BasicServerHTTPlistener
                 // Obtain a response object.
                 HttpListenerResponse response = context.Response;
 
+                string result = "NONE WAS RETURNED";
+
+                int i = 1;
+
+                ArrayList arrayList= new ArrayList();
+
+                while (HttpUtility.ParseQueryString(request.Url.Query).Get("param"+i) != null)
+                {
+                    
+                    arrayList.Add(HttpUtility.ParseQueryString(request.Url.Query).Get("param" + i));
+
+                    i++;
+                }
+
+                
+
+                if (methodeName != null && methodeName != "favicon.ico")
+                {
+                    Type type = typeof(MyReflectionClass);
+                    MethodInfo method = type.GetMethod(methodeName);
+                    MyReflectionClass c = new MyReflectionClass();
+                    result = (string)method.Invoke(c, arrayList.ToArray());
+                    Console.WriteLine(result);
+                   
+                }
+
                 // Construct a response.
-                string responseString = "<HTML><BODY> Hello world!</BODY></HTML>";
+                string responseString = "<HTML><BODY> "+ result + "</BODY></HTML>";
                 byte[] buffer = System.Text.Encoding.UTF8.GetBytes(responseString);
                 // Get a response stream and write the response to it.
                 response.ContentLength64 = buffer.Length;
@@ -119,7 +161,60 @@ namespace BasicServerHTTPlistener
                 output.Close();
             }
             // Httplistener neither stop ... But Ctrl-C do that ...
-            // listener.Stop();
+             listener.Stop();
+        }
+    }
+
+    public class MyReflectionClass
+    {
+        public string MyMethod()
+        {
+            Console.WriteLine("Call MyMethod 1");
+            return "Call MyMethod 2";
+        }
+
+        public string stringMethode(String message)
+        {
+            return "call methode param reader -> " + message;
+        }
+
+        public String somme(String a, String b)
+        {
+            return "cela est la somme de parametre -> " + (Int32.Parse(a) * Int32.Parse(b));
+        }
+
+        public String externalCall(String args)
+        {
+            Console.WriteLine("external call");
+            //
+            // Set up the process with the ProcessStartInfo class.
+            // https://www.dotnetperls.com/process
+            //
+            ProcessStartInfo start = new ProcessStartInfo();
+            start.FileName = @"..\..\..\ExecTest\bin\Debug\ExecTest.exe"; // Specify exe name.
+
+            start.Arguments = args;// Specify arguments.
+            
+           
+            start.UseShellExecute = false;
+            start.RedirectStandardOutput = true;
+            //
+            // Start the process.
+            //
+            string result = "NONE";
+            using (Process process = Process.Start(start))
+            {
+                //
+                // Read in all the text from the process with the StreamReader.
+                //
+                
+                using (StreamReader reader = process.StandardOutput)
+                {
+                    result = reader.ReadToEnd();
+                    Console.WriteLine(result);
+                }
+            }
+            return result;
         }
     }
 }

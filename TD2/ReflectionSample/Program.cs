@@ -26,4 +26,14 @@ public class MyReflectionClass
         Console.WriteLine("Call MyMethod 1");
         return "Call MyMethod 2";
     }
+    public string stringMethode(String message)
+    {
+        return message;
+    }
+
+    public int somme(int a,int b)
+    {
+        return a*b;
+    }
+
 }
